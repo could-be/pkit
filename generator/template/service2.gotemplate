@@ -1,0 +1,23 @@
+{{define "FieldList"}}
+    {{- range $i,$v := . -}}
+        {{if (eq $i 0) -}}
+            {{.VarName}} {{.TypeName -}}
+        {{else -}}
+            , {{.VarName}} {{.TypeName -}}
+         {{- end -}}
+    {{- end -}}
+{{- end -}}
+
+{{define "Api"}}
+    {{.Name}}({{template "FieldList" .Params}}) ({{template "FieldList" .Results}})
+{{- end -}}
+
+package {{.ProjectName}}
+
+var ServiceName = "{{.ServiceName}}"
+
+type {{.ServiceName}} interface {
+    {{- range .Apis -}}
+        {{template "Api" .}}
+    {{- end }}
+}

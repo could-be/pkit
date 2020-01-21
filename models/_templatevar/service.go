@@ -1,0 +1,44 @@
+package templatevar
+
+const (
+	ServiceTemplate = `
+package service
+
+import (
+    "errors"
+
+    "{{.Git}}/{{.ProjectName}}/api"
+    "{{.Git}}/{{.ProjectName}}/dao"
+    "{{.Git}}/{{.ProjectName}}/models"
+    "{{.Git}}/util/instrumenting/dlog"
+)
+
+// Service implements ServiceCloser interface
+type service struct {
+    cfg *models.Config
+
+    dao *dao.Dao
+}
+
+// return a service instance
+func New(appCfg interface{}) {{.ProjectName}}.ServiceCloser {
+    cfg, ok := appCfg.(*models.Config)
+    if !ok {
+        dlog.Fatal(errors.New("invalid config"))
+    }
+    d, err := dao.New(cfg)
+    dlog.Fatal(err)
+
+    return &service{
+        cfg: cfg,
+        dao: d,
+    }
+}
+
+// Close implements igrpc.Closer
+func (s *service) Close() error {
+    return nil
+}
+
+`
+)

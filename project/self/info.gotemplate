@@ -1,0 +1,17 @@
+package templatevar
+
+import (
+    "github.com/could-be/tools/pkit/models"
+)
+
+// 自动生成: 依据project/template 目录结构自动生成的本程序需要的静态文件
+var Templates = []models.TemplateInfo{
+{{range . -}}
+    {
+        TemplateName:   "{{.TemplateName}}",
+        RelativePath:   "{{.RelativePath}}",
+        TemplateSrc:    {{FirstToUpper .TemplateName}}Template,
+        IsKit:          {{.IsKit}},
+    },
+{{ end -}}
+}

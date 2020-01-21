@@ -1,0 +1,64 @@
+package {{.ProjectName}}
+
+import (
+    "context"
+
+    "github.com/go-kit/kit/endpoint"
+    "github.com/go-kit/kit/tracing/opentracing"
+
+    "{{.Git}}/util/bizresp"
+    "{{.Git}}/util/igrpc"
+    "{{.Git}}/util/instrumenting/dlog"
+)
+
+{{with .Interface}}
+    // 需要实现 service.go 中 interface的接口
+    type Endpoints struct {
+    {{- range .Apis}}
+        {{.ApiName}}Endpoint    endpoint.Endpoint
+    {{- end }}
+    }
+
+    {{range .Apis -}}
+    func (e *Endpoints) {{.ApiName}}(ctx context.Context, in {{.Params.TypeName}}) ({{.Results.TypeName}}, error) {
+        response, err := e.{{.ApiName}}Endpoint(ctx, in)
+        if err != nil {
+            return nil, err
+        }
+        return response.({{.Results.TypeName}}), nil
+    }
+
+    {{ end }}
+
+    // 需要封装 grpc, tracing, metrics 信息,
+    // 以及安全处理
+    {{$InterfaceName := .InterfaceName}}
+    {{- range .Apis -}}
+    func make{{.ApiName}}Endpoint(s {{$InterfaceName}}) endpoint.Endpoint {
+        return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+            req := request.({{.Params.TypeName}})
+            return s.{{.ApiName}}(ctx, req)
+        }
+    }
+
+    {{ end }}
+
+    func MakeEndpoints(s {{$InterfaceName}}) *Endpoints {
+        return &Endpoints{
+            {{- range .Apis }}
+                {{.ApiName}}Endpoint:            wrapEndpoint("{{.ApiName}}", make{{.ApiName}}Endpoint(s)),
+            {{- end }}
+        }
+    }
+
+    func wrapEndpoint(apiName string, e endpoint.Endpoint) endpoint.Endpoint {
+        e = igrpc.Recovery()(e)
+        e = opentracing.TraceServer(instr.Tracer(), apiName)(e)
+        e = dlog.GoKitMiddleware()(e)
+        e = bizresp.GoKitMiddleware()(e)
+        // Collector should be executed after GoKitMiddleware
+        e = instr.Metrics().GoKitCollect(apiName)(e)
+
+        return e
+    }
+{{- end }}
