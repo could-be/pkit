@@ -5,7 +5,7 @@ import (
 )
 
 // 自动生成: 依据project/template 目录结构自动生成的本程序需要的静态文件
-var Templates = []models.TemplateInfo{
+var Templates = []*models.TemplateInfo{
 	{
 		TemplateName: "Dockerfile",
 		RelativePath: "Dockerfile",
@@ -61,9 +61,9 @@ var Templates = []models.TemplateInfo{
 		IsKit:        true,
 	},
 	{
-		TemplateName: "configDevYaml",
-		RelativePath: "config-dev.yaml",
-		TemplateSrc:  ConfigDevYamlTemplate,
+		TemplateName: "configDevToml",
+		RelativePath: "config-dev.toml",
+		TemplateSrc:  ConfigDevTomlTemplate,
 		IsKit:        false,
 	},
 	{

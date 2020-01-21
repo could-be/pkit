@@ -11,39 +11,8 @@ import (
 
 	"github.com/could-be/tools/pkit/generator"
 	"github.com/could-be/tools/pkit/models"
+	"github.com/could-be/tools/pkit/util"
 )
-
-// 删除特殊字符, 并且特殊字符后大写 api/run.go --> apiRunGo
-// 先删除.gotemplate
-func trimSpecialCharacters(str string) string {
-	for _, sep := range []string{".", "-", "/"} {
-		list := strings.Split(str, sep)
-		for i := range list {
-			if i == 0 {
-				str = list[0]
-				continue
-			}
-			// 特殊字符后面第一个大写
-			str += generator.FirstToUpper(list[i])
-		}
-	}
-
-	return str
-}
-
-// {{workDir}}/project/template/api/run.go --> apiRun, api/run.go
-// go.mod Makefile Dockerfile docker-compose
-func pathInfo(prefix, abs string) (snake, relativePath string) {
-
-	relativePath = strings.TrimPrefix(abs, prefix)
-	// api/run.go.gotemplate ---> api/run.go
-	relativePath = strings.TrimSuffix(relativePath, ".gotemplate")
-
-	// docker-compose --> dockerCompose
-	snake = trimSpecialCharacters(relativePath)
-
-	return
-}
 
 // 是否是 kit 相关内容, 即 api/目录下加内容
 func isKit(path string) bool {
@@ -99,7 +68,7 @@ func GenStaticFromProjectTemplate(projectTemplateDir, templateVarDir, templateVa
 			return err
 		}
 
-		name, relativePath := pathInfo(prefix, path)
+		name, relativePath := util.PathInfo(prefix, path)
 
 		templateVars = append(templateVars, models.TemplateVars{
 			TemplateName: name, // eg: ApiRun

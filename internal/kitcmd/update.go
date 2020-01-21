@@ -13,6 +13,7 @@ import (
 	"github.com/could-be/tools/pkit/internal/base"
 	"github.com/could-be/tools/pkit/models"
 	"github.com/could-be/tools/pkit/models/templatevar"
+	"github.com/could-be/tools/pkit/util"
 )
 
 var CmdUpdate = &base.Command{
@@ -115,7 +116,8 @@ func update() {
 		if info != nil && !info.IsDir() && strings.HasSuffix(info.Name(), ".proto") {
 
 			generator.GenProto(path)
-			codeInfo = generator.ParseGoFile(FileName(path) + ".pb.go")
+			pbGo := util.ReplacePathType(path, ".pb.go")
+			codeInfo = generator.ParseGoFile(pbGo)
 			return errors.New("")
 		}
 		return nil
@@ -126,11 +128,4 @@ func update() {
 			generator.Generate(tmplInfo.RelativePath, tmplInfo.TemplateSrc, codeInfo)
 		}
 	}
-}
-
-// api/run.go --> run
-func FileName(path string) string {
-
-	ext := filepath.Ext(path)
-	return strings.TrimSuffix(path, ext)
 }

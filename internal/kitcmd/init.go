@@ -12,6 +12,7 @@ import (
 	"github.com/could-be/tools/pkit/internal/base"
 	"github.com/could-be/tools/pkit/models"
 	"github.com/could-be/tools/pkit/models/templatevar"
+	"github.com/could-be/tools/pkit/util"
 )
 
 var CmdInit = &base.Command{
@@ -88,18 +89,29 @@ func NewProjectTemplateFiles(projectName string) error {
 
 	for _, tmplInfo := range templatevar.Templates {
 		if !tmplInfo.IsKit {
-			if filepath.Ext(tmplInfo.RelativePath) == ".proto" {
-				base := filepath.Base(tmplInfo.RelativePath)
-				ext := filepath.Ext(tmplInfo.RelativePath)
-				old := strings.TrimSuffix(base, ext)
-				tmplInfo.RelativePath = strings.Replace(tmplInfo.RelativePath, old, generator.FirstToUpper(projectName), -1)
-
-				tmplInfo.TemplateName = strings.Replace(tmplInfo.TemplateName, old, generator.FirstToUpper(projectName), -1)
-			}
+			DynamicUpdateFileName(projectName, tmplInfo)
 			generator.Generate(tmplInfo.RelativePath, tmplInfo.TemplateSrc, project)
 		}
 	}
 	return nil
+}
+
+// config.yaml
+func DynamicUpdateFileName(projectName string, tmplInfo *models.TemplateInfo) {
+	_, ext := util.GetPathName(tmplInfo.RelativePath)
+
+	// 修改 example.proto 文件名为当前项目名
+	if filepath.Ext(tmplInfo.RelativePath) == ".proto" {
+		tmplInfo.RelativePath = filepath.Dir(tmplInfo.RelativePath) + "/" + projectName + ext
+		tmplInfo.TemplateName = util.RelativePath2Snake(tmplInfo.RelativePath)
+		return
+	}
+
+	base := filepath.Base(tmplInfo.RelativePath)
+	if base == "config.toml" || base == "config.json" || base == "config.yaml" {
+		tmplInfo.RelativePath = filepath.Dir(tmplInfo.RelativePath) + "/" + projectName + ext
+		tmplInfo.TemplateName = util.RelativePath2Snake(tmplInfo.RelativePath)
+	}
 }
 
 // ▶ git init
